@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "RSS generator",
   "main": "src/index.js",
+  "scripts": {
+    "build": "NODE_ENV=production webpack --mode production"
+  },
   "author": "Svetlenkaja",
   "license": "ISC",
   "devDependencies": {
