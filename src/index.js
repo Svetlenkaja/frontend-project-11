@@ -1,1 +1,3 @@
-console.log('Hello, SvetKA');
+import 'bootstrap';
+
+console.log('hello, Console');

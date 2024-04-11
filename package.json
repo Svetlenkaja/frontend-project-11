@@ -2,7 +2,8 @@
   "name": "@hexlet/code",
   "version": "1.0.0",
   "description": "RSS generator",
-  "main": "src/index.js",
+  "main": "./src/index.js",
+  "type": "module",
   "scripts": {
     "build": "NODE_ENV=production webpack --mode production"
   },
