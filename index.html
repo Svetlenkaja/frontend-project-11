@@ -8,9 +8,16 @@
     <body>
       <div class="container mt-5">
         <h1>Hello SvetKA!</h1>
-          <form id="main" method="post">
-            <input type="text" name="path" id="path" required>
-            <button class="btn btn-primary">Button</button>
+          <form id="rss-form" method="post">
+            <div class="row">
+              <div class="col">
+              <input id="url-input" name="url" aria-label="url" class="form-control w-100" autofocus required placeholder="ссылка RSS">
+              <label for="url-input">Ссылка RSS</label>
+            </div>
+            <div class="col">
+              <button type="submit" class="btn btn-primary">Добавить</button>
+            </div>
+            </div>
           </form>
       </div>
     </body>  

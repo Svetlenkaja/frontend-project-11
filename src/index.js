@@ -1,3 +1,4 @@
 import 'bootstrap';
+import init from './init.js';
 
-console.log('hello, Console');
+init();
