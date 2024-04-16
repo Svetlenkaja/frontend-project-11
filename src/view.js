@@ -11,19 +11,15 @@ const watch = (state) => {
 };
 
 const render = (state, stateForm) => {
-  const input = document.querySelector('#url-input');
+  const { elements } = state;
   if (stateForm === 'invalid') {
-    input.classList.add('is-invalid');
-    const feedback = document.querySelector('.feedback');
-    console.log(state);
-    console.log(feedback);
-    feedback.innerHTML = state.errors;
+    elements.input.classList.add('is-invalid');
   } else {
-    input.classList.remove('is-invalid');
-    const form = document.querySelector('#rss-form');
-    form.reset();
-    input.focus();
+    elements.input.classList.remove('is-invalid');
+    elements.form.reset();
+    elements.input.focus();
   }
+  elements.feedback.innerHTML = state.errors;
 }
 
 export { watch };

@@ -1,40 +1,51 @@
 import { schema } from "./utils.js";
-
 import { watch } from "./view.js";
+import resources from './locales/index.js';
+import i18next from 'i18next';
 
 const state = {
   stateForm: 'valid',
   errors: '',
-  feeds: []
+  feeds: [],
+  lng: 'ru',
+};
+
+state.elements = { 
+  form: document.querySelector('#rss-form'), 
+  input: document.querySelector('#url-input'), 
+  feedback: document.querySelector('.feedback'),
 };
 
 const watchedState = watch(state);
 
-const form = document.querySelector('#rss-form');
+const validate = (url) => schema.notOneOf(state.feeds).validate(url);
 
-const validate = (url) => {
-  let uniqSchema = schema.notOneOf(state.feeds);
-  
-  return uniqSchema.validate(url);
-}
+const app = () => {
 
-export default () => {
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const url = formData.get('url');
-
-    validate(url)
-    .then((data) => {
-      console.log(data);
-      watchedState.stateForm = 'valid';
-      state.feeds.push(data);
-      state.errors = '';
-      console.log('clear');
-    })
-    .catch((error) => { 
-      state.errors = error.message;
-      watchedState.stateForm = 'invalid';
-    });
+  const i18n = i18next.createInstance();
+  i18n.init({
+  lng: state.lng,
+  debug: false,
+  resources,
   })
+  .then(() => {
+    state.elements.form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const url = formData.get('url');
+
+      validate(url)
+      .then((data) => {
+        state.errors = '';
+        watchedState.stateForm = 'valid';
+        state.feeds.push(data);
+      })
+      .catch((err) => { 
+        state.errors =  err.errors.map((err) => i18n.t(`errors.${err.key}`));
+        watchedState.stateForm = 'invalid';
+      });
+    });
+  });
 };
+
+export default app;
