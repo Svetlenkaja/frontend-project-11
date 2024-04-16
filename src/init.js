@@ -4,7 +4,7 @@ import { watch } from "./view.js";
 
 const state = {
   stateForm: 'valid',
-  errors: {},
+  errors: '',
   feeds: []
 };
 
@@ -12,18 +12,29 @@ const watchedState = watch(state);
 
 const form = document.querySelector('#rss-form');
 
+const validate = (url) => {
+  let uniqSchema = schema.notOneOf(state.feeds);
+  
+  return uniqSchema.validate(url);
+}
+
 export default () => {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const data = new FormData(event.target);
-    const url = data.get('url');
+    const formData = new FormData(event.target);
+    const url = formData.get('url');
 
-    schema.validate(url)
-    .then((data) => state.stateForm = 'valid')
+    validate(url)
+    .then((data) => {
+      console.log(data);
+      watchedState.stateForm = 'valid';
+      state.feeds.push(data);
+      state.errors = '';
+      console.log('clear');
+    })
     .catch((error) => { 
-      watchedState.stateForm = 'invalid';
       state.errors = error.message;
-      console.log(error.message);
+      watchedState.stateForm = 'invalid';
     });
   })
 };
