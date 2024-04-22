@@ -7,7 +7,7 @@ const watch = (state) => {
       render(state, curValue);
     }
     if(path === 'feed') {
-      //render feed
+      renderFeeds(curValue);
     }
   });
   return watchedState;
@@ -23,6 +23,30 @@ const render = (state, stateForm) => {
     elements.input.focus();
   }
   elements.feedback.innerHTML = state.errors;
+}
+
+const renderFeeds = (feeds) => {
+  console.log('renderFeeds');
+  const container = document.querySelector('.feeds');
+  const div = document.createElement('div');
+  div.classList.add('card-body');
+  const h4 = document.createElement('h4');
+  h4.textContent = 'Feeds';
+  div.append(h4);
+  container.append(div);
+  const ul = document.createElement('ul');
+  ul.classList.add('list-group', 'border-0', 'rounded-0');
+  const li = document.createElement('li');
+  li.classList.add('list-group-item', 'border-0', 'border-end-0');
+  const h3 = document.createElement('h3');
+  h3.classList.add('h6', 'm-0');
+  h3.textContent = feeds[0].title;
+  li.append(h3);
+  const p = document.createElement('p');
+  p.classList.add('m-0 small text-black-50');
+  p.textContent = feeds[0].description;
+  li.append(p);
+  ul.append(li);
 }
 
 export { watch };

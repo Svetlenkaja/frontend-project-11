@@ -24,6 +24,7 @@ const watchedState = watch(state);
 const validate = (url) => schema.notOneOf(state.feeds).validate(url);
 
 const parser = (data) => {
+  console.log(data);
   const parser = new DOMParser();
   const dom = parser.parseFromString(data, 'text/html');
   const feed = {
@@ -42,16 +43,17 @@ const parser = (data) => {
 
 const getData = (url) => {
   const proxyUrl = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`;
-  axios.get(proxyUrl)
+  return axios.get(proxyUrl)
   .then((response) => parser(response.data.contents))
+  .then((res) => res)
   .catch(err => console.log(err));
 };
 
 const loadPosts = (state) => {
-  state.feeds.map((item) => {
-    const { feed, posts } = getData(item.url);
-    watchedState.posts.push(...posts);
-  });
+  // state.feeds.map((item) => {
+  //   const { feed, posts } = getData(item.url);
+  //   watchedState.posts.push(...posts);
+  // });
 }
 
 const app = () => {
@@ -73,6 +75,7 @@ const app = () => {
         state.errors = '';
         watchedState.stateForm = 'valid';
         const { feed, posts } = getData(url);
+        console.log(feed);
         watchedState.feeds.push({ id: _.uniqueId, url, ...feed });
       })
       .catch((err) => { 
