@@ -23,22 +23,35 @@ const watchedState = watch(state);
 
 const validate = (url) => schema.notOneOf(state.feeds).validate(url);
 
-const loadPosts = (state) => {
-  state.feeds.map((feed) => {
-    const proxyUrl = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(feed.url)}`;
+const parser = (data) => {
+  const parser = new DOMParser();
+  const dom = parser.parseFromString(data, 'text/html');
+  const feed = {
+    title: dom.querySelector('channel > title').textContent,
+    description: dom.querySelector('channel > description').innerHTML,
+  }
+  const items = dom.querySelectorAll('channel > item');
+  const posts = Array.from(items).map((item) => ({ 
+      title: item.querySelector('title').textContent, 
+      description: item.querySelector('description').innerHTML,
+      link: item.querySelector('link').innerHTML,  
+      id: _.uniqueId,        
+  }));
+  return { feed, posts };
+};
 
-    axios.get(proxyUrl)
-    .then((response) => {
-      const parser = new DOMParser();
-      const dom = parser.parseFromString(response.data.contents, 'text/html');
-      console.log(dom);
-      const title = dom.querySelector('channel > title');
-      console.log(title.textContent);
-      const description = dom.querySelector('channel > description');
-      console.log(description.textContent);
-    });
-  })
-  
+const getData = (url) => {
+  const proxyUrl = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`;
+  axios.get(proxyUrl)
+  .then((response) => parser(response.data.contents))
+  .catch(err => console.log(err));
+};
+
+const loadPosts = (state) => {
+  state.feeds.map((item) => {
+    const { feed, posts } = getData(item.url);
+    watchedState.posts.push(...posts);
+  });
 }
 
 const app = () => {
@@ -59,8 +72,8 @@ const app = () => {
       .then((url) => {
         state.errors = '';
         watchedState.stateForm = 'valid';
-        state.feeds.push({ id: _.uniqueId, url });
-        console.log(state.feeds);
+        const { feed, posts } = getData(url);
+        watchedState.feeds.push({ id: _.uniqueId, url, ...feed });
       })
       .catch((err) => { 
         state.errors =  err.errors.map((err) => i18n.t(`errors.${err.key}`));

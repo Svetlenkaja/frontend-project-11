@@ -6,6 +6,9 @@ const watch = (state) => {
     if(path === 'stateForm') {
       render(state, curValue);
     }
+    if(path === 'feed') {
+      //render feed
+    }
   });
   return watchedState;
 };
