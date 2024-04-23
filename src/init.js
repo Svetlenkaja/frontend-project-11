@@ -5,6 +5,7 @@ import i18next from 'i18next';
 import axios from 'axios';
 import _ from 'lodash';
 
+const proxyUrl = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
 const state = {
   stateForm: 'valid',
   errors: '',
@@ -27,13 +28,14 @@ const parser = (data) => {
   console.log(data);
   const parser = new DOMParser();
   const dom = parser.parseFromString(data, 'text/html');
+  console.log(dom);
   const feed = {
-    title: dom.querySelector('channel > title').textContent,
+    title: dom.querySelector('channel > title').innerHTML,
     description: dom.querySelector('channel > description').innerHTML,
   }
   const items = dom.querySelectorAll('channel > item');
   const posts = Array.from(items).map((item) => ({ 
-      title: item.querySelector('title').textContent, 
+      title: item.querySelector('title').innerHTML, 
       description: item.querySelector('description').innerHTML,
       link: item.querySelector('link').innerHTML,  
       id: _.uniqueId,        
@@ -42,22 +44,28 @@ const parser = (data) => {
 };
 
 const getData = (url) => {
-  const proxyUrl = `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`;
-  return axios.get(proxyUrl)
-  .then((response) => parser(response.data.contents))
-  .then((res) => res)
+  return axios.get(`${proxyUrl}${encodeURIComponent(url)}`)
+  .then((response) => {
+    const data = parser(response.data.contents);
+    return data;
+  })
   .catch(err => console.log(err));
 };
 
 const loadPosts = (state) => {
-  // state.feeds.map((item) => {
-  //   const { feed, posts } = getData(item.url);
-  //   watchedState.posts.push(...posts);
-  // });
-}
+  const promises = state.feeds.map((item) => axios.get(`${proxyUrl}${encodeURIComponent(item.url)}`));
+  Promise.all(promises)
+  .then((response) => {
+    console.log(response);
+    response.map(({ contents }) => {
+      const { posts } =  parser(contents);
+    })
+    watchedState.posts.push(...posts);
+    return data;
+  });
+};
 
 const app = () => {
-
   const i18n = i18next.createInstance();
   i18n.init({
   lng: state.lng,
@@ -68,17 +76,20 @@ const app = () => {
     state.elements.form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const formData = new FormData(event.target);
-      const data = formData.get('url');
+      const url = formData.get('url');
 
-      validate(data)
-      .then((url) => {
+      validate(url)
+      .then((validUrl) => {
         state.errors = '';
         watchedState.stateForm = 'valid';
-        const { feed, posts } = getData(url);
-        console.log(feed);
+        return getData(validUrl);
+      })
+      .then((data) => {
+        const { feed, posts } = data;
         watchedState.feeds.push({ id: _.uniqueId, url, ...feed });
       })
-      .catch((err) => { 
+      .catch((err) => {
+        console.log(err);
         state.errors =  err.errors.map((err) => i18n.t(`errors.${err.key}`));
         watchedState.stateForm = 'invalid';
       });

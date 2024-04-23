@@ -6,8 +6,13 @@ const watch = (state) => {
     if(path === 'stateForm') {
       render(state, curValue);
     }
-    if(path === 'feed') {
+    if(path === 'feeds') {
+      console.log('watched feeds');
       renderFeeds(curValue);
+    }
+    if(path === 'posts') {
+      console.log('watched post');
+      renderPosts(curValue);
     }
   });
   return watchedState;
@@ -26,12 +31,11 @@ const render = (state, stateForm) => {
 }
 
 const renderFeeds = (feeds) => {
-  console.log('renderFeeds');
   const container = document.querySelector('.feeds');
   const div = document.createElement('div');
   div.classList.add('card-body');
   const h4 = document.createElement('h4');
-  h4.textContent = 'Feeds';
+  h4.textContent = 'Фиды';
   div.append(h4);
   container.append(div);
   const ul = document.createElement('ul');
@@ -43,10 +47,21 @@ const renderFeeds = (feeds) => {
   h3.textContent = feeds[0].title;
   li.append(h3);
   const p = document.createElement('p');
-  p.classList.add('m-0 small text-black-50');
+  p.classList.add('m-0', 'small', 'text-black-50');
   p.textContent = feeds[0].description;
   li.append(p);
   ul.append(li);
+  div.append(ul);
+};
+
+const renderPosts = (posts) => {
+  const container = document.querySelector('.posts');
+  const div = document.createElement('div');
+  div.classList.add('card-body');
+  const h4 = document.createElement('h4');
+  h4.textContent = 'Посты';
+  div.append(h4);
+  container.append(div);
 }
 
 export { watch };
