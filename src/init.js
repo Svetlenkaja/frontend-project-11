@@ -53,15 +53,17 @@ const getData = (url) => {
 };
 
 const loadPosts = (state) => {
-  const promises = state.feeds.map((item) => axios.get(`${proxyUrl}${encodeURIComponent(item.url)}`));
-  Promise.all(promises)
+  const promises = state.feeds.map((item) => axios.get(`${proxyUrl}${encodeURIComponent(item.url)}`)
   .then((response) => {
     console.log(response);
-    response.map(({ contents }) => {
-      const { posts } =  parser(contents);
-    })
+    const { posts } =  parser(response.data.contents);
+    console.log(posts);
     watchedState.posts.push(...posts);
-    return data;
+  }));
+
+  Promise.all(promises)
+  .then(() => {
+    setTimeout(() => loadPosts(state), 10000);
   });
 };
 
@@ -96,7 +98,7 @@ const app = () => {
     });
   })
   .then(() => {
-    setInterval(() => loadPosts(state), 10000);
+    setTimeout(() => loadPosts(state), 10000);
   });
 };
 

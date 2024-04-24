@@ -55,13 +55,36 @@ const renderFeeds = (feeds) => {
 };
 
 const renderPosts = (posts) => {
-  const container = document.querySelector('.posts');
-  const div = document.createElement('div');
-  div.classList.add('card-body');
-  const h4 = document.createElement('h4');
-  h4.textContent = 'Посты';
-  div.append(h4);
-  container.append(div);
+  if (posts.length > 0) {
+    const container = document.querySelector('.posts');
+    container.innerHTML = '';
+    const div = document.createElement('div');
+    div.classList.add('card-body');
+    const h4 = document.createElement('h4');
+    h4.textContent = 'Посты';
+    div.append(h4);
+    const ul = document.createElement('ul');
+    ul.classList.add('list-group', 'border-0', 'rounded-0');
+    posts.forEach(element => {
+      const li = document.createElement('li');
+      li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+      const a = document.createElement('a');
+      a.setAttribute('href', element.link);
+      a.classList.add('fw-bold');
+      a.innerHTML = element.title;
+      li.append(a);
+      const button = document.createElement('button');
+      button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+      button.setAttribute('type', 'button');
+      button.setAttribute('data-bs-toogle', 'modal');
+      button.setAttribute('data-bs-target', '#modal');
+      button.innerHTML = 'Просмотр';
+      li.append(button);
+      ul.append(li);
+    });
+    div.append(ul);
+    container.append(div);
+  }
 }
 
 export { watch };
