@@ -34,12 +34,14 @@ const parser = (data) => {
     description: dom.querySelector('channel > description').innerHTML,
   }
   const items = dom.querySelectorAll('channel > item');
-  const posts = Array.from(items).map((item) => ({ 
+  const posts = Array.from(items).map((item) => {
+    console.log(item);
+    return { 
       title: item.querySelector('title').innerHTML, 
       description: item.querySelector('description').innerHTML,
-      link: item.querySelector('link').innerHTML,  
-      id: _.uniqueId,        
-  }));
+      link: item.querySelector('link').nextSibling.data,   
+      guid: item.querySelector('guid').textContent,      
+  }});
   return { feed, posts };
 };
 
@@ -52,13 +54,23 @@ const getData = (url) => {
   .catch(err => console.log(err));
 };
 
+const checkIsUnique = (existPosts, parsePosts) => {
+  return parsePosts
+  .filter((newPost) => !existPosts.map(({ guid }) => guid).includes(newPost.guid))
+  .map((item) => {
+    item.id =_.uniqueId;
+    return item; 
+ });
+}
+
 const loadPosts = (state) => {
   const promises = state.feeds.map((item) => axios.get(`${proxyUrl}${encodeURIComponent(item.url)}`)
   .then((response) => {
     console.log(response);
     const { posts } =  parser(response.data.contents);
-    console.log(posts);
-    watchedState.posts.push(...posts);
+    const newPosts = checkIsUnique(state.posts, posts);
+    console.log(newPosts);
+    watchedState.posts.push(...newPosts);
   }));
 
   Promise.all(promises)
