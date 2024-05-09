@@ -29,6 +29,12 @@ const parser = (data) => {
   const parser = new DOMParser();
   const dom = parser.parseFromString(data, 'text/html');
   console.log(dom);
+  const rss = dom.querySelector('rss');
+  if (rss === null) {
+    const error = new Error();
+    error.name = 'RSS';
+    throw error;
+  }
   const feed = {
     title: dom.querySelector('channel > title').innerHTML,
     description: dom.querySelector('channel > description').innerHTML,
@@ -51,7 +57,10 @@ const getData = (url) => {
     const data = parser(response.data.contents);
     return data;
   })
-  .catch(err => console.log(err));
+  .catch(err => {
+    console.log(err);
+    throw new Error(err.name);
+});
 };
 
 const checkIsUnique = (existPosts, parsePosts) => {
@@ -75,7 +84,12 @@ const loadPosts = (state) => {
 
   Promise.all(promises)
   .then(() => {
+    console.log('next');
     setTimeout(() => loadPosts(state), 10000);
+  })
+  .catch(err => {
+    console.log(err);
+    throw new Error(err.name);
   });
 };
 
@@ -101,6 +115,7 @@ const app = () => {
       .then((data) => {
         const { feed, posts } = data;
         watchedState.feeds.push({ id: _.uniqueId, url, ...feed });
+        watchedState.posts.push(...posts);
       })
       .catch((err) => {
         console.log(err);
@@ -110,7 +125,7 @@ const app = () => {
     });
   })
   .then(() => {
-    setTimeout(() => loadPosts(state), 10000);
+    loadPosts(state);
   });
 };
 
