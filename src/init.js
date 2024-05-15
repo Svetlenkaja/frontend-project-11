@@ -7,8 +7,8 @@ import _ from 'lodash';
 
 const proxyUrl = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
 const state = {
-  stateForm: 'valid',
-  errors: '',
+  form: { state:'empty', errors: null },
+  modal: {postId: null},
   feeds: [],
   posts: [],
   lng: 'ru',
@@ -18,6 +18,8 @@ state.elements = {
   form: document.querySelector('#rss-form'), 
   input: document.querySelector('#url-input'), 
   feedback: document.querySelector('.feedback'),
+  postsContainer: document.querySelector('.posts'),
+  modal: document.querySelector('#modal'),
 };
 
 const watchedState = watch(state);
@@ -31,9 +33,7 @@ const parser = (data) => {
   console.log(dom);
   const rss = dom.querySelector('rss');
   if (rss === null) {
-    const error = new Error();
-    error.name = 'RSS';
-    throw error;
+    throw new Error('errors.invalidRss');
   }
   const feed = {
     title: dom.querySelector('channel > title').innerHTML,
@@ -59,7 +59,7 @@ const getData = (url) => {
   })
   .catch(err => {
     console.log(err);
-    throw new Error(err.name);
+    throw err;
 });
 };
 
@@ -75,18 +75,13 @@ const checkIsUnique = (existPosts, parsePosts) => {
 const loadPosts = (state) => {
   const promises = state.feeds.map((item) => axios.get(`${proxyUrl}${encodeURIComponent(item.url)}`)
   .then((response) => {
-    console.log(response);
     const { posts } =  parser(response.data.contents);
     const newPosts = checkIsUnique(state.posts, posts);
-    console.log(newPosts);
     watchedState.posts.unshift(...newPosts);
   }));
 
   Promise.all(promises)
-  .then(() => {
-    console.log('next');
-    // setTimeout(() => loadPosts(state), 10000);
-  })
+  .then(() => { })
   .catch(err => {
     console.log(err);
     // throw new Error(err.name);
@@ -109,19 +104,20 @@ const app = () => {
 
       validate(url)
       .then((validUrl) => {
-        state.errors = '';
-        watchedState.stateForm = 'valid';
+        state.form.errors = null;
+        watchedState.form.state = 'valid';
         return getData(validUrl);
       })
       .then((data) => {
         const { feed, posts } = data;
         watchedState.feeds.unshift({ id: _.uniqueId, url, ...feed });
-        watchedState.posts.push(...posts);
+        const postsWithId = posts.map((post) => { post.id = _.uniqueId(); return post;});
+        watchedState.posts.push(...postsWithId);
       })
       .catch((err) => {
         console.log(err);
-        state.errors =  err.errors.map((err) => i18n.t(`errors.${err.key}`));
-        watchedState.stateForm = 'invalid';
+        state.form.errors = err.errors ? err.errors.map((err) => i18n.t(`errors.${err.key}`)) : i18n.t(`${err.message}`);
+        watchedState.form.state = 'invalid';
       });
     });
   })

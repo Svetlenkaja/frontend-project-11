@@ -3,7 +3,7 @@ import onChange from 'on-change';
 
 const watch = (state) => {
   const watchedState = onChange(state, (path, curValue) => {
-    if(path === 'stateForm') {
+    if(path === 'form.state') {
       render(state, curValue);
     }
     if(path === 'feeds') {
@@ -28,7 +28,7 @@ const render = (state, stateForm) => {
     console.log(elements.form);
     elements.input.focus();
   }
-  elements.feedback.innerHTML = state.errors;
+  elements.feedback.innerHTML = state.form.errors;
 }
 
 const renderFeeds = (feeds) => {
@@ -91,5 +91,7 @@ const renderPosts = (posts) => {
     container.append(div);
   }
 }
+
+
 
 export { watch };
