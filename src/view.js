@@ -25,6 +25,7 @@ const render = (state, stateForm) => {
   } else {
     elements.input.classList.remove('is-invalid');
     elements.form.reset();
+    console.log(elements.form);
     elements.input.focus();
   }
   elements.feedback.innerHTML = state.errors;
@@ -66,6 +67,7 @@ const renderPosts = (posts) => {
     const ul = document.createElement('ul');
     ul.classList.add('list-group', 'border-0', 'rounded-0');
     posts.forEach(element => {
+      console.log(element);
       const li = document.createElement('li');
       li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
       const a = document.createElement('a');
@@ -76,8 +78,11 @@ const renderPosts = (posts) => {
       const button = document.createElement('button');
       button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
       button.setAttribute('type', 'button');
-      button.setAttribute('data-bs-toogle', 'modal');
-      button.setAttribute('data-bs-target', '#modal');
+      // button.setAttribute('data-bs-toogle', 'modal');
+      // button.setAttribute('data-bs-target', '#modal');
+      button.dataset.bsToogle = 'modal';
+      button.dataset.bsTarget = '#modal';
+      button.dataset.id = element.id;
       button.innerHTML = 'Просмотр';
       li.append(button);
       ul.append(li);

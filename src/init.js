@@ -67,7 +67,7 @@ const checkIsUnique = (existPosts, parsePosts) => {
   return parsePosts
   .filter((newPost) => !existPosts.map(({ guid }) => guid).includes(newPost.guid))
   .map((item) => {
-    item.id =_.uniqueId;
+    item.id =_.uniqueId();
     return item; 
  });
 }
@@ -79,18 +79,19 @@ const loadPosts = (state) => {
     const { posts } =  parser(response.data.contents);
     const newPosts = checkIsUnique(state.posts, posts);
     console.log(newPosts);
-    watchedState.posts.push(...newPosts);
+    watchedState.posts.unshift(...newPosts);
   }));
 
   Promise.all(promises)
   .then(() => {
     console.log('next');
-    setTimeout(() => loadPosts(state), 10000);
+    // setTimeout(() => loadPosts(state), 10000);
   })
   .catch(err => {
     console.log(err);
-    throw new Error(err.name);
-  });
+    // throw new Error(err.name);
+  })
+  .finally(() => setTimeout(() => loadPosts(state), 55000));
 };
 
 const app = () => {
@@ -114,7 +115,7 @@ const app = () => {
       })
       .then((data) => {
         const { feed, posts } = data;
-        watchedState.feeds.push({ id: _.uniqueId, url, ...feed });
+        watchedState.feeds.unshift({ id: _.uniqueId, url, ...feed });
         watchedState.posts.push(...posts);
       })
       .catch((err) => {
