@@ -17,6 +17,7 @@ const watch = (state, i18n) => {
     const { feeds } = state;
     const { feedsContainer } = state.elements;
 
+    feedsContainer.innerHTML = '';
     const div = document.createElement('div');
     div.classList.add('card-body');
     feedsContainer.append(div);

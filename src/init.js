@@ -11,7 +11,6 @@ const parser = (data) => {
   console.log(data);
   const parser = new DOMParser();
   const dom = parser.parseFromString(data, 'text/html');
-  console.log(dom);
   const rss = dom.querySelector('rss');
   if (rss === null) {
     throw new Error('errors.invalidRss');
@@ -22,7 +21,6 @@ const parser = (data) => {
   }
   const items = dom.querySelectorAll('channel > item');
   const posts = Array.from(items).map((item) => {
-    console.log(item);
     return { 
       title: item.querySelector('title').innerHTML, 
       description: item.querySelector('description').innerHTML,
@@ -100,14 +98,15 @@ const app = () => {
 
     const watchedState = watch(state, i18n);
 
-    const validate = (url) => schema.notOneOf(state.feeds).validate(url);
+    const validate = (url, urls) => schema.notOneOf(urls).validate(url);
 
     state.elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
       const formData = new FormData(event.target);
       const url = formData.get('url');
+      const urls = watchedState.feeds.map((f) => f.url);
 
-      validate(url)
+      validate(url, urls)
       .then((validUrl) => {
         state.form.errors = null;
         watchedState.form.state = 'valid';
