@@ -4,6 +4,10 @@ export default {
       invalidUrl: 'Ссылка должна быть валидным URL',
       duplicateUrl: 'Ссылка уже добавлена ранее',
       invalidRss: 'Не найден RSS поток',
+    },
+    titles: {
+      feeds: 'Фиды',
+      posts: 'Посты',
     }
   }
 }

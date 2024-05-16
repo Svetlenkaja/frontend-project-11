@@ -6,25 +6,6 @@ import axios from 'axios';
 import _ from 'lodash';
 
 const proxyUrl = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
-const state = {
-  form: { state:'empty', errors: null },
-  modal: {postId: null},
-  feeds: [],
-  posts: [],
-  lng: 'ru',
-};
-
-state.elements = { 
-  form: document.querySelector('#rss-form'), 
-  input: document.querySelector('#url-input'), 
-  feedback: document.querySelector('.feedback'),
-  postsContainer: document.querySelector('.posts'),
-  modal: document.querySelector('#modal'),
-};
-
-const watchedState = watch(state);
-
-const validate = (url) => schema.notOneOf(state.feeds).validate(url);
 
 const parser = (data) => {
   console.log(data);
@@ -72,11 +53,12 @@ const checkIsUnique = (existPosts, parsePosts) => {
  });
 }
 
-const loadPosts = (state) => {
-  const promises = state.feeds.map((item) => axios.get(`${proxyUrl}${encodeURIComponent(item.url)}`)
+const loadPosts = (watchedState) => {
+  const { feeds } = watchedState;
+  const promises = feeds.map((item) => axios.get(`${proxyUrl}${encodeURIComponent(item.url)}`)
   .then((response) => {
     const { posts } =  parser(response.data.contents);
-    const newPosts = checkIsUnique(state.posts, posts);
+    const newPosts = checkIsUnique(watchedState.posts, posts);
     watchedState.posts.unshift(...newPosts);
   }));
 
@@ -86,10 +68,28 @@ const loadPosts = (state) => {
     console.log(err);
     // throw new Error(err.name);
   })
-  .finally(() => setTimeout(() => loadPosts(state), 55000));
+  .finally(() => setTimeout(() => loadPosts(watchedState), 55000));
 };
 
 const app = () => {
+  const state = {
+    form: { state:'empty', errors: null },
+    modal: { postId: null },
+    feeds: [],
+    posts: [],
+    viewedPosts: new Set(),
+    lng: 'ru',
+  };
+  
+  state.elements = { 
+    form: document.querySelector('#rss-form'), 
+    input: document.querySelector('#url-input'), 
+    feedback: document.querySelector('.feedback'),
+    postsContainer: document.querySelector('.posts'),
+    feedsContainer: document.querySelector('.feeds'),
+    modal: document.querySelector('#modal'),
+  };
+
   const i18n = i18next.createInstance();
   i18n.init({
   lng: state.lng,
@@ -97,7 +97,12 @@ const app = () => {
   resources,
   })
   .then(() => {
-    state.elements.form.addEventListener('submit', async (event) => {
+
+    const watchedState = watch(state, i18n);
+
+    const validate = (url) => schema.notOneOf(state.feeds).validate(url);
+
+    state.elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
       const formData = new FormData(event.target);
       const url = formData.get('url');
@@ -120,9 +125,15 @@ const app = () => {
         watchedState.form.state = 'invalid';
       });
     });
-  })
-  .then(() => {
-    loadPosts(state);
+
+    state.elements.postsContainer.addEventListener(('click'), (event) => {
+      const { id } = event.target.dataset;
+      if (id) {
+        watchedState.modal.postId = id;
+        watchedState.viewedPosts.add(id);
+      }
+    });
+    loadPosts(watchedState);
   });
 };
 
