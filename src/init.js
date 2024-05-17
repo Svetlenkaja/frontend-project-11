@@ -69,6 +69,16 @@ const loadPosts = (watchedState) => {
   .finally(() => setTimeout(() => loadPosts(watchedState), 55000));
 };
 
+const buildErrorMessage = (error, i18n) => {
+  console.log(JSON.stringify(error));
+  switch(error.name) {
+    case 'ValidationError':
+      return error.errors.map((err) => i18n.t(`errors.${err.key}`));
+    case 'AxiosError':
+      return i18n.t('errors.networkError');
+  }
+}
+
 const app = () => {
   const state = {
     form: { state:'empty', errors: null },
@@ -119,9 +129,9 @@ const app = () => {
         watchedState.posts.push(...postsWithId);
       })
       .catch((err) => {
-        console.log(err);
-        state.form.errors = err.errors ? err.errors.map((err) => i18n.t(`errors.${err.key}`)) : i18n.t(`${err.message}`);
+        state.form.errors = buildErrorMessage(err, i18n);
         watchedState.form.state = 'invalid';
+        console.log(err.message);
       });
     });
 
