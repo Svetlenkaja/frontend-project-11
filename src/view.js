@@ -1,10 +1,12 @@
 import onChange from 'on-change';
 
 const watch = (state, i18n) => {
-  const renderForm = (stateForm) => {
+  const renderForm = (formState) => {
     const { elements } = state;
-    if (stateForm === 'invalid') {
+    if (formState === 'invalid') {
       elements.input.classList.add('is-invalid');
+      elements.feedback.classList.remove('text-success');
+      elements.feedback.classList.add('text-danger');
     } else {
       elements.input.classList.remove('is-invalid');
       elements.form.reset();
@@ -12,6 +14,23 @@ const watch = (state, i18n) => {
     }
     elements.feedback.innerHTML = state.form.errors;
   };
+
+  const renderState = (updateState) => {
+    const { elements } = state;
+    if (updateState === 'loaded') {
+      elements.feedback.classList.remove('text-danger');
+      elements.feedback.classList.add('text-success');
+      elements.feedback.innerHTML = i18n.t('loaded');
+    } else if (updateState === 'failed') {
+      elements.feedback.classList.remove('text-success');
+      elements.feedback.classList.add('text-danger');
+      elements.feedback.innerHTML = state.form.errors;
+    } else {
+      elements.feedback.classList.remove('text-success');
+      elements.feedback.classList.add('text-danger');
+      elements.feedback.innerHTML = '';
+    }
+  }
 
   const renderFeeds = () => {;
     const { feeds } = state;
@@ -109,6 +128,9 @@ const watch = (state, i18n) => {
     switch (path) {
       case 'form.state':
         renderForm(curValue);
+        break;
+      case 'updateData':
+        renderState(curValue);
         break;
       case 'feeds':
         renderFeeds();

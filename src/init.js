@@ -8,12 +8,13 @@ import _ from 'lodash';
 const proxyUrl = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
 
 const parser = (data) => {
-  console.log(data);
   const parser = new DOMParser();
   const dom = parser.parseFromString(data, 'text/html');
   const rss = dom.querySelector('rss');
   if (rss === null) {
-    throw new Error('errors.invalidRss');
+    const error = new Error();
+    error.name = 'InvalidRSS';
+    throw error;
   }
   const feed = {
     title: dom.querySelector('channel > title').innerHTML,
@@ -30,17 +31,7 @@ const parser = (data) => {
   return { feed, posts };
 };
 
-const getData = (url) => {
-  return axios.get(`${proxyUrl}${encodeURIComponent(url)}`)
-  .then((response) => {
-    const data = parser(response.data.contents);
-    return data;
-  })
-  .catch(err => {
-    console.log(err);
-    throw err;
-});
-};
+const getData = (url) => axios.get(`${proxyUrl}${encodeURIComponent(url)}`);
 
 const checkIsUnique = (existPosts, parsePosts) => {
   return parsePosts
@@ -51,38 +42,50 @@ const checkIsUnique = (existPosts, parsePosts) => {
  });
 }
 
-const loadPosts = (watchedState) => {
+const loadPosts = (watchedState, i18n) => {
+  watchedState.updateData = 'loading';
   const { feeds } = watchedState;
-  const promises = feeds.map((item) => axios.get(`${proxyUrl}${encodeURIComponent(item.url)}`)
-  .then((response) => {
-    const { posts } =  parser(response.data.contents);
-    const newPosts = checkIsUnique(watchedState.posts, posts);
-    watchedState.posts.unshift(...newPosts);
-  }));
+  const promises = feeds.map(({ url }) => getData(url));
 
   Promise.all(promises)
-  .then(() => { })
-  .catch(err => {
-    console.log(err);
-    // throw new Error(err.name);
+  .then((responses) => {
+    responses.map((response) => {
+      const { posts } =  parser(response.data.contents);
+      const newPosts = checkIsUnique(watchedState.posts, posts);
+      watchedState.posts.unshift(...newPosts);
+    });
+    if (watchedState.posts.length > 0) {
+      watchedState.updateData = 'loaded';
+    }
+    watchedState.form.errors = null;
   })
-  .finally(() => setTimeout(() => loadPosts(watchedState), 55000));
+  .catch(err => {
+    watchedState.form.errors = buildErrorMessage(err, i18n);
+    watchedState.updateData = 'failed';
+    console.log(err);
+    throw err;
+  })
+  .finally(() => setTimeout(() => loadPosts(watchedState, i18n), 5000));
 };
 
 const buildErrorMessage = (error, i18n) => {
-  console.log(JSON.stringify(error));
   switch(error.name) {
     case 'ValidationError':
       return error.errors.map((err) => i18n.t(`errors.${err.key}`));
     case 'AxiosError':
       return i18n.t('errors.networkError');
+    case 'InvalidRSS':
+      return i18n.t('errors.invalidRss');
+    default:
+      return error.message;
   }
 }
 
 const app = () => {
   const state = {
-    form: { state:'empty', errors: null },
+    form: { state:'initial', errors: null },
     modal: { postId: null },
+    updateData: 'empty',
     feeds: [],
     posts: [],
     viewedPosts: new Set(),
@@ -105,13 +108,13 @@ const app = () => {
   resources,
   })
   .then(() => {
-
     const watchedState = watch(state, i18n);
 
     const validate = (url, urls) => schema.notOneOf(urls).validate(url);
 
     state.elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
+      state.form.state = 'initial';
       const formData = new FormData(event.target);
       const url = formData.get('url');
       const urls = watchedState.feeds.map((f) => f.url);
@@ -122,17 +125,22 @@ const app = () => {
         watchedState.form.state = 'valid';
         return getData(validUrl);
       })
-      .then((data) => {
-        const { feed, posts } = data;
+      .then((response) => {
+        const { feed, posts } = parser(response.data.contents);
         watchedState.feeds.unshift({ id: _.uniqueId, url, ...feed });
         const postsWithId = posts.map((post) => { post.id = _.uniqueId(); return post;});
         watchedState.posts.push(...postsWithId);
+        watchedState.updateData = 'loaded';
       })
       .catch((err) => {
+        console.log(err);
         state.form.errors = buildErrorMessage(err, i18n);
-        watchedState.form.state = 'invalid';
-        console.log(err.message);
-      });
+        if (err.name === 'ValidationError') {
+          watchedState.form.state = 'invalid';
+        } else {
+          watchedState.form.updateData = 'failed';
+        }
+      })
     });
 
     state.elements.postsContainer.addEventListener(('click'), (event) => {
@@ -142,7 +150,7 @@ const app = () => {
         watchedState.viewedPosts.add(id);
       }
     });
-    loadPosts(watchedState);
+    loadPosts(watchedState, i18n);
   });
 };
 

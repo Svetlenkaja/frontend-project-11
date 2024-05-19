@@ -2,13 +2,14 @@ export default {
   translation: {
     errors: {
       invalidUrl: 'Ссылка должна быть валидным URL',
-      duplicateUrl: 'Ссылка уже добавлена ранее',
-      invalidRss: 'Не найден RSS поток',
-      networkError: '',
+      duplicateUrl: 'RSS уже существует',
+      invalidRss: 'Ресурс не содержит валидный RSS',
+      networkError: 'Ошибка сети',
     },
     titles: {
       feeds: 'Фиды',
       posts: 'Посты',
-    }
+    },
+    loaded: 'RSS успешно загружен'
   }
 }
