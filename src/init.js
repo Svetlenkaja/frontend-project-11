@@ -43,6 +43,7 @@ const loadPosts = (watchedState, i18n) => {
         const { posts } = parser(response.data.contents);
         const newPosts = checkIsUnique(watchedState.posts, posts);
         watchedState.posts.unshift(...newPosts);
+        return watchedState.posts;
       });
       if (watchedState.posts.length > 0) {
         watchedState.updateData = 'loaded';
