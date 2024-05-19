@@ -6,19 +6,19 @@ yup.setLocale({
       key: 'emptyUrl',
       message: 'Required field',
     },
-    url: { 
+    url: {
       key: 'invalidUrl',
       message: 'Invalid URL',
-   },
+    },
   },
   mixed: {
-    notOneOf: { 
+    notOneOf: {
       key: 'duplicateUrl',
       message: 'Duplicate value',
     },
-  }
+  },
 });
 
 const schema = yup.string().required().url();
 
-export { schema };
+export default schema;

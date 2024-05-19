@@ -11,6 +11,6 @@ export default {
       feeds: 'Фиды',
       posts: 'Посты',
     },
-    loaded: 'RSS успешно загружен'
-  }
-}
+    loaded: 'RSS успешно загружен',
+  },
+};
