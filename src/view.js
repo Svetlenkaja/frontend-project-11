@@ -21,16 +21,12 @@ const watch = (state, i18n) => {
       elements.feedback.classList.remove('text-danger');
       elements.feedback.classList.add('text-success');
       elements.feedback.innerHTML = i18n.t('loaded');
-    } else if (updateState === 'failed') {
-      elements.feedback.classList.remove('text-success');
-      elements.feedback.classList.add('text-danger');
-      elements.feedback.innerHTML = state.form.errors;
     } else {
       elements.feedback.classList.remove('text-success');
       elements.feedback.classList.add('text-danger');
-      elements.feedback.innerHTML = '';
+      elements.feedback.innerHTML = state.form.errors;
     }
-  }
+  };
 
   const renderFeeds = () => {;
     const { feeds } = state;

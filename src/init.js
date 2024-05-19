@@ -1,4 +1,5 @@
-import { schema, parser } from "./utils.js";
+import { schema } from "./utils.js";
+import { parser } from "./parser.js";
 import { watch } from "./view.js";
 import resources from './locales/index.js';
 import i18next from 'i18next';
@@ -7,8 +8,6 @@ import _ from 'lodash';
 
 const proxyUrl = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
 
-const getData = (url) => axios.get(`${proxyUrl}${encodeURIComponent(url)}`);
-
 const checkIsUnique = (existPosts, parsePosts) => {
   return parsePosts
   .filter((newPost) => !existPosts.map(({ guid }) => guid).includes(newPost.guid))
@@ -16,12 +15,13 @@ const checkIsUnique = (existPosts, parsePosts) => {
     item.id =_.uniqueId();
     return item; 
  });
-}
+};
 
 const loadPosts = (watchedState, i18n) => {
+  watchedState.form.errors = null;
   watchedState.updateData = 'loading';
   const { feeds } = watchedState;
-  const promises = feeds.map(({ url }) => getData(url));
+  const promises = feeds.map(({ url }) => axios.get(`${proxyUrl}${encodeURIComponent(url)}`));
 
   Promise.all(promises)
   .then((responses) => {
@@ -33,13 +33,10 @@ const loadPosts = (watchedState, i18n) => {
     if (watchedState.posts.length > 0) {
       watchedState.updateData = 'loaded';
     }
-    watchedState.form.errors = null;
   })
   .catch(err => {
     watchedState.form.errors = buildErrorMessage(err, i18n);
     watchedState.updateData = 'failed';
-    console.log(err);
-    throw err;
   })
   .finally(() => setTimeout(() => loadPosts(watchedState, i18n), 5000));
 };
@@ -55,11 +52,11 @@ const buildErrorMessage = (error, i18n) => {
     default:
       return error.message;
   }
-}
+};
 
 const app = () => {
   const state = {
-    form: { state:'initial', errors: null },
+    form: { state: 'initial', errors: null },
     modal: { postId: null },
     updateData: 'empty',
     feeds: [],
@@ -99,7 +96,7 @@ const app = () => {
       .then((validUrl) => {
         state.form.errors = null;
         watchedState.form.state = 'valid';
-        return getData(validUrl);
+        return axios.get(`${proxyUrl}${encodeURIComponent(validUrl)}`);
       })
       .then((response) => {
         const { feed, posts } = parser(response.data.contents);
@@ -111,10 +108,10 @@ const app = () => {
       .catch((err) => {
         console.log(err);
         state.form.errors = buildErrorMessage(err, i18n);
-        if (err.name === 'ValidationError') {
+        if (err.name === 'ValidationError' || err.name === 'InvalidRSS') {
           watchedState.form.state = 'invalid';
         } else {
-          watchedState.form.updateData = 'failed';
+          watchedState.updateData = 'failed';
         }
       })
     });
