@@ -1,4 +1,4 @@
-import { schema } from "./utils.js";
+import { schema, parser } from "./utils.js";
 import { watch } from "./view.js";
 import resources from './locales/index.js';
 import i18next from 'i18next';
@@ -6,30 +6,6 @@ import axios from 'axios';
 import _ from 'lodash';
 
 const proxyUrl = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
-
-const parser = (data) => {
-  const parser = new DOMParser();
-  const dom = parser.parseFromString(data, 'text/html');
-  const rss = dom.querySelector('rss');
-  if (rss === null) {
-    const error = new Error();
-    error.name = 'InvalidRSS';
-    throw error;
-  }
-  const feed = {
-    title: dom.querySelector('channel > title').innerHTML,
-    description: dom.querySelector('channel > description').innerHTML,
-  }
-  const items = dom.querySelectorAll('channel > item');
-  const posts = Array.from(items).map((item) => {
-    return { 
-      title: item.querySelector('title').innerHTML, 
-      description: item.querySelector('description').innerHTML,
-      link: item.querySelector('link').nextSibling.data,   
-      guid: item.querySelector('guid').textContent,      
-  }});
-  return { feed, posts };
-};
 
 const getData = (url) => axios.get(`${proxyUrl}${encodeURIComponent(url)}`);
 
