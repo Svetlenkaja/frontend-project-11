@@ -7,8 +7,6 @@ import parser from './parser.js';
 import watch from './view.js';
 import resources from './locales/index.js';
 
-const proxyUrl = 'https://allorigins.hexlet.app/get?disableCache=true&url=';
-
 const buildErrorMessage = (error, i18n) => {
   switch (error.name) {
     case 'ValidationError':
@@ -31,11 +29,18 @@ const checkIsUnique = (existPosts, parsePosts) => (
     })
 );
 
+const buildUrl = (url) => {
+  const proxyUrl = new URL('/get', 'https://allorigins.hexlet.app');
+  proxyUrl.searchParams.set('disableCache', 'true');
+  proxyUrl.searchParams.set('url', url);
+  return proxyUrl.toString();
+};
+
 const loadPosts = (watchedState, i18n) => {
   watchedState.form.errors = null;
   watchedState.updateData = 'loading';
   const { feeds } = watchedState;
-  const promises = feeds.map(({ url }) => axios.get(`${proxyUrl}${encodeURIComponent(url)}`));
+  const promises = feeds.map(({ url }) => axios.get(buildUrl(url)));
 
   Promise.all(promises)
     .then((responses) => {
@@ -98,7 +103,7 @@ const app = () => {
           .then((validUrl) => {
             state.form.errors = null;
             watchedState.form.state = 'valid';
-            return axios.get(`${proxyUrl}${encodeURIComponent(validUrl)}`);
+            return axios.get(buildUrl(validUrl));
           })
           .then((response) => {
             const { feed, posts } = parser(response.data.contents);
@@ -110,7 +115,7 @@ const app = () => {
           .catch((err) => {
             console.log(err);
             state.form.errors = buildErrorMessage(err, i18n);
-            if (err.name === 'ValidationError' || err.name === 'InvalidRSS') {
+            if (err.name === 'ValidationError' || err.name === 'InvalidRSS' || err.name === 'ParsingError') {
               watchedState.form.state = 'invalid';
             } else {
               watchedState.updateData = 'failed';

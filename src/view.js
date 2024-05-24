@@ -87,7 +87,8 @@ const watch = (state, i18n) => {
 
         const a = document.createElement('a');
         a.setAttribute('href', element.link);
-        a.innerHTML = element.title;
+        console.log(element.title);
+        a.textContent = element.title;
 
         if (viewedPosts.has(element.id)) {
           a.classList.add('fw-normal', 'link-secondary');
@@ -140,7 +141,7 @@ const watch = (state, i18n) => {
         renderModal(curValue);
         break;
       default:
-        throw new Error('Unknown state');
+        throw new Error(`Unknown state${state}`);
     }
   });
   return watchedState;
