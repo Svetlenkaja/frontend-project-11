@@ -12,5 +12,6 @@ export default {
       posts: 'Посты',
     },
     loaded: 'RSS успешно загружен',
+    loading: 'Идет загрузка...',
   },
 };

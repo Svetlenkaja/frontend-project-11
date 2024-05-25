@@ -1,9 +1,8 @@
 /* eslint-disable no-undef */
 import onChange from 'on-change';
 
-const watch = (state, i18n) => {
+const watch = (state, i18n, elements) => {
   const renderForm = (formState) => {
-    const { elements } = state;
     if (formState === 'invalid') {
       elements.input.classList.add('is-invalid');
       elements.feedback.classList.remove('text-success');
@@ -17,7 +16,6 @@ const watch = (state, i18n) => {
   };
 
   const renderState = (updateState) => {
-    const { elements } = state;
     if (updateState === 'loaded') {
       elements.feedback.classList.remove('text-danger');
       elements.feedback.classList.add('text-success');
@@ -25,13 +23,19 @@ const watch = (state, i18n) => {
     } else {
       elements.feedback.classList.remove('text-success');
       elements.feedback.classList.add('text-danger');
-      elements.feedback.innerHTML = state.form.errors;
+      if (updateState === 'failed') {
+        elements.feedback.innerHTML = state.form.errors;
+      } else if (updateState === 'loading') {
+        elements.feedback.innerHTML = i18n.t('loading');
+      } else {
+        elements.feedback.innerHTML = '';
+      }
     }
   };
 
   const renderFeeds = () => {
     const { feeds } = state;
-    const { feedsContainer } = state.elements;
+    const { feedsContainer } = elements;
 
     feedsContainer.innerHTML = '';
     const div = document.createElement('div');
@@ -67,7 +71,7 @@ const watch = (state, i18n) => {
   const renderPosts = () => {
     const { posts, viewedPosts } = state;
     if (posts.length > 0) {
-      const { postsContainer } = state.elements;
+      const { postsContainer } = elements;
       postsContainer.innerHTML = '';
 
       const div = document.createElement('div');
@@ -123,11 +127,14 @@ const watch = (state, i18n) => {
   };
 
   const watchedState = onChange(state, (path, curValue) => {
+    console.log(path);
     switch (path) {
       case 'form.state':
+      case 'form.errors':
         renderForm(curValue);
         break;
       case 'updateData':
+        console.log(curValue);
         renderState(curValue);
         break;
       case 'feeds':
@@ -141,7 +148,7 @@ const watch = (state, i18n) => {
         renderModal(curValue);
         break;
       default:
-        throw new Error(`Unknown state${state}`);
+        throw new Error(`Unknown state ${path}`);
     }
   });
   return watchedState;

@@ -72,7 +72,7 @@ const app = () => {
     lng: 'ru',
   };
 
-  state.elements = {
+  const elements = {
     form: document.querySelector('#rss-form'),
     input: document.querySelector('#url-input'),
     feedback: document.querySelector('.feedback'),
@@ -88,11 +88,11 @@ const app = () => {
     resources,
   })
     .then(() => {
-      const watchedState = watch(state, i18n);
+      const watchedState = watch(state, i18n, elements);
 
       const validate = (url, urls) => schema.notOneOf(urls).validate(url);
 
-      state.elements.form.addEventListener('submit', (event) => {
+      elements.form.addEventListener('submit', (event) => {
         event.preventDefault();
         state.form.state = 'initial';
         const formData = new FormData(event.target);
@@ -121,16 +121,16 @@ const app = () => {
               watchedState.updateData = 'failed';
             }
           });
+        loadPosts(watchedState, i18n);
       });
 
-      state.elements.postsContainer.addEventListener(('click'), (event) => {
+      elements.postsContainer.addEventListener(('click'), (event) => {
         const { id } = event.target.dataset;
         if (id) {
           watchedState.modal.postId = id;
           watchedState.viewedPosts.add(id);
         }
       });
-      loadPosts(watchedState, i18n);
     });
 };
 
