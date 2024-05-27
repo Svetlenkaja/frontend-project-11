@@ -10,8 +10,6 @@ const watch = (state, i18n, elements) => {
   } = elements;
 
   const renderForm = (formState) => {
-    input.removeAttribute('disabled');
-    submitButton.removeAttribute('disabled');
     if (formState === 'invalid') {
       input.classList.add('is-invalid');
       feedback.classList.remove('text-success');
@@ -41,16 +39,17 @@ const watch = (state, i18n, elements) => {
         feedback.classList.remove('text-danger');
         feedback.classList.add('text-success');
         feedback.textContent = i18n.t('loaded');
-        // input.focus();
         break;
       case 'loading':
         submitButton.setAttribute('disabled', 'disabled');
         input.setAttribute('disabled', 'disabled');
         feedback.classList.remove('text-success');
         feedback.classList.remove('text-danger');
-        feedback.innerHTML = i18n.t('loading');
+        feedback.innerHTML = '';
         break;
       default:
+        submitButton.removeAttribute('disabled');
+        input.removeAttribute('disabled');
         throw new Error(
           `Unknown loadingProcess status: '${updateState}'`,
         );
@@ -150,7 +149,6 @@ const watch = (state, i18n, elements) => {
   };
 
   const watchedState = onChange(state, (path, curValue) => {
-    console.log(path);
     switch (path) {
       case 'form.state':
       case 'form.errors':

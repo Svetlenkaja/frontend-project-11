@@ -9,8 +9,6 @@ import resources from './locales/index.js';
 
 const buildErrorMessage = (error, i18n) => {
   switch (error.name) {
-    case 'ValidationError':
-      return error.errors.map((err) => i18n.t(`errors.${err.key}`));
     case 'AxiosError':
       return i18n.t('errors.networkError');
     case 'InvalidRSS':
@@ -86,7 +84,26 @@ const app = () => {
     .then(() => {
       const watchedState = watch(state, i18n, elements);
 
-      const validate = (url, urls) => schema.notOneOf(urls).validate(url);
+      const validateUrl = (url, urls) => (
+        schema.notOneOf(urls).validate(url).then(() => { }).catch((error) => error.message)
+      );
+
+      const loadUrl = (url) => (
+        axios.get(url)
+          .then((response) => {
+            watchedState.updateData.status = 'loading';
+            const { feed, posts } = parser(response.data.contents);
+            watchedState.feeds.unshift({ id: _.uniqueId, url, ...feed });
+            const postsWithId = posts.map((post) => { post.id = _.uniqueId(); return post; });
+            watchedState.posts.push(...postsWithId);
+            state.updateData.error = null;
+            watchedState.updateData.status = 'idle';
+          })
+          .catch((error) => {
+            state.updateData.error = buildErrorMessage(error, i18n);
+            watchedState.updateData.status = 'failed';
+          })
+      );
 
       elements.form.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -95,33 +112,22 @@ const app = () => {
         const url = formData.get('url');
         const urls = watchedState.feeds.map((f) => f.url);
 
-        validate(url, urls)
-          .then((validUrl) => {
-            state.form.errors = null;
-            watchedState.form.state = 'valid';
-            watchedState.updateData.status = 'loading';
-            return axios.get(buildUrl(validUrl));
-          })
-          .then((response) => {
-            const { feed, posts } = parser(response.data.contents);
-            watchedState.feeds.unshift({ id: _.uniqueId, url, ...feed });
-            const postsWithId = posts.map((post) => { post.id = _.uniqueId(); return post; });
-            watchedState.posts.push(...postsWithId);
-            state.updateData.error = null;
-            watchedState.updateData.status = 'idle';
+        validateUrl(url, urls)
+          .then((error) => {
+            if (error) {
+              state.form.errors = i18n.t(`errors.${error.key}`);
+              watchedState.form.state = 'invalid';
+            } else {
+              state.form.errors = null;
+              watchedState.form.state = 'valid';
+              state.updateData.status = 'idle';
+              loadUrl(url, state, watchedState, i18n);
+            }
           })
           .catch((err) => {
             switch (err.name) {
-              case 'ValidationError':
-                state.form.errors = err.errors.map((error) => i18n.t(`errors.${error.key}`));
-                watchedState.form.state = 'invalid';
-                break;
-              case 'InvalidRSS':
-                state.form.errors = i18n.t('errors.invalidRss');
-                watchedState.form.state = 'invalid';
-                break;
               case 'AxiosError':
-                state.updateData.error = buildErrorMessage(err, i18n);
+                state.updateData.error = i18n.t('errors.networkError');
                 watchedState.updateData.status = 'failed';
                 break;
               default:
