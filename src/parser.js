@@ -4,7 +4,8 @@ export default (data) => {
   const xml = parser.parseFromString(data, 'application/xml');
   const parseError = xml.querySelector('parsererror');
   if (parseError) {
-    const error = new Error(parseError.textContent);
+    console.error(parseError.textContent);
+    const error = new Error();
     error.name = 'ParsingError';
     throw error;
   }

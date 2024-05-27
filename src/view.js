@@ -16,20 +16,37 @@ const watch = (state, i18n, elements) => {
   };
 
   const renderState = (updateState) => {
-    if (updateState === 'loaded') {
-      elements.feedback.classList.remove('text-danger');
-      elements.feedback.classList.add('text-success');
-      elements.feedback.innerHTML = i18n.t('loaded');
-    } else {
-      elements.feedback.classList.remove('text-success');
-      elements.feedback.classList.add('text-danger');
-      if (updateState === 'failed') {
-        elements.feedback.innerHTML = state.form.errors;
-      } else if (updateState === 'loading') {
-        elements.feedback.innerHTML = i18n.t('loading');
-      } else {
-        elements.feedback.innerHTML = '';
-      }
+    const { input, feedback, submitButton } = elements;
+    switch (updateState) {
+      case 'failed':
+        input.classList.add('is-invalid');
+        feedback.classList.add('text-danger');
+        feedback.textContent = state.updateData.errors;
+        submitButton.removeAttribute('disabled');
+        input.removeAttribute('disabled');
+        input.focus();
+        break;
+      case 'idle':
+        submitButton.removeAttribute('disabled');
+        input.removeAttribute('disabled');
+        input.classList.add('text-success');
+        feedback.classList.remove('text-danger');
+        feedback.classList.add('text-success');
+        feedback.textContent = i18n.t('loaded');
+        // input.focus();
+        break;
+      case 'loading':
+        submitButton.setAttribute('disabled', 'disabled');
+        input.setAttribute('disabled', 'disabled');
+        feedback.classList.remove('text-success');
+        feedback.classList.remove('text-danger');
+        feedback.innerHTML = '';
+        feedback.innerHTML = i18n.t('loading');
+        break;
+      default:
+        throw new Error(
+          `Unknown loadingProcess status: '${updateState}'`,
+        );
     }
   };
 
@@ -133,8 +150,7 @@ const watch = (state, i18n, elements) => {
       case 'form.errors':
         renderForm(curValue);
         break;
-      case 'updateData':
-        console.log(curValue);
+      case 'updateData.status':
         renderState(curValue);
         break;
       case 'feeds':

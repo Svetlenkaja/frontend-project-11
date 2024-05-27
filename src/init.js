@@ -37,8 +37,8 @@ const buildUrl = (url) => {
 };
 
 const loadPosts = (watchedState, i18n) => {
-  watchedState.form.errors = null;
-  watchedState.updateData = 'loading';
+  // watchedState.form.errors = null;
+  // watchedState.updateData.status = 'loading';
   const { feeds } = watchedState;
   const promises = feeds.map(({ url }) => axios.get(buildUrl(url)));
 
@@ -50,13 +50,13 @@ const loadPosts = (watchedState, i18n) => {
         watchedState.posts.unshift(...newPosts);
         return watchedState.posts;
       });
-      if (watchedState.posts.length > 0) {
-        watchedState.updateData = 'loaded';
-      }
+      // if (watchedState.posts.length > 0) {
+      //   watchedState.updateData.status = 'idle';
+      // }
     })
     .catch((err) => {
       watchedState.form.errors = buildErrorMessage(err, i18n);
-      watchedState.updateData = 'failed';
+      watchedState.updateData.status = 'failed';
     })
     .finally(() => setTimeout(() => loadPosts(watchedState, i18n), 5000));
 };
@@ -65,7 +65,7 @@ const app = () => {
   const state = {
     form: { state: 'initial', errors: null },
     modal: { postId: null },
-    updateData: 'empty',
+    updateData: { status: 'idle', error: null },
     feeds: [],
     posts: [],
     viewedPosts: new Set(),
@@ -79,6 +79,7 @@ const app = () => {
     postsContainer: document.querySelector('.posts'),
     feedsContainer: document.querySelector('.feeds'),
     modal: document.querySelector('#modal'),
+    submitButton: document.querySelector('button[type="submit"]'),
   };
 
   const i18n = i18next.createInstance();
@@ -106,19 +107,21 @@ const app = () => {
             return axios.get(buildUrl(validUrl));
           })
           .then((response) => {
+            watchedState.updateData.status = 'loading';
             const { feed, posts } = parser(response.data.contents);
             watchedState.feeds.unshift({ id: _.uniqueId, url, ...feed });
             const postsWithId = posts.map((post) => { post.id = _.uniqueId(); return post; });
             watchedState.posts.push(...postsWithId);
-            watchedState.updateData = 'loaded';
+            state.updateData.error = null;
+            watchedState.updateData.status = 'idle';
           })
           .catch((err) => {
-            console.log(err);
-            state.form.errors = buildErrorMessage(err, i18n);
             if (err.name === 'ValidationError' || err.name === 'InvalidRSS' || err.name === 'ParsingError') {
+              state.form.errors = buildErrorMessage(err, i18n);
               watchedState.form.state = 'invalid';
             } else {
-              watchedState.updateData = 'failed';
+              state.updateData.error = buildErrorMessage(err, i18n);
+              watchedState.updateData.status = 'failed';
             }
           });
         loadPosts(watchedState, i18n);
