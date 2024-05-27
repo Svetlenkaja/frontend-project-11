@@ -113,7 +113,7 @@ const app = () => {
           .catch((err) => {
             switch (err.name) {
               case 'ValidationError':
-                state.form.errors = error.errors.map((error) => i18n.t(`errors.${error.key}`));
+                state.form.errors = err.errors.map((error) => i18n.t(`errors.${error.key}`));
                 watchedState.form.state = 'invalid';
                 break;
               case 'InvalidRSS':
