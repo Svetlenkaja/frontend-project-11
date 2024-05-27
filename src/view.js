@@ -2,26 +2,34 @@
 import onChange from 'on-change';
 
 const watch = (state, i18n, elements) => {
+  const {
+    input,
+    feedback,
+    submitButton,
+    form,
+  } = elements;
+
   const renderForm = (formState) => {
+    input.removeAttribute('disabled');
+    submitButton.removeAttribute('disabled');
     if (formState === 'invalid') {
-      elements.input.classList.add('is-invalid');
-      elements.feedback.classList.remove('text-success');
-      elements.feedback.classList.add('text-danger');
+      input.classList.add('is-invalid');
+      feedback.classList.remove('text-success');
+      feedback.classList.add('text-danger');
     } else {
-      elements.input.classList.remove('is-invalid');
-      elements.form.reset();
-      elements.input.focus();
+      input.classList.remove('is-invalid');
+      form.reset();
+      input.focus();
     }
     elements.feedback.innerHTML = state.form.errors;
   };
 
   const renderState = (updateState) => {
-    const { input, feedback, submitButton } = elements;
     switch (updateState) {
       case 'failed':
         input.classList.add('is-invalid');
         feedback.classList.add('text-danger');
-        feedback.textContent = state.updateData.errors;
+        feedback.textContent = state.updateData.error;
         submitButton.removeAttribute('disabled');
         input.removeAttribute('disabled');
         input.focus();
@@ -40,7 +48,6 @@ const watch = (state, i18n, elements) => {
         input.setAttribute('disabled', 'disabled');
         feedback.classList.remove('text-success');
         feedback.classList.remove('text-danger');
-        feedback.innerHTML = '';
         feedback.innerHTML = i18n.t('loading');
         break;
       default:
@@ -108,7 +115,6 @@ const watch = (state, i18n, elements) => {
 
         const a = document.createElement('a');
         a.setAttribute('href', element.link);
-        console.log(element.title);
         a.textContent = element.title;
 
         if (viewedPosts.has(element.id)) {

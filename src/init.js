@@ -99,10 +99,10 @@ const app = () => {
           .then((validUrl) => {
             state.form.errors = null;
             watchedState.form.state = 'valid';
+            watchedState.updateData.status = 'loading';
             return axios.get(buildUrl(validUrl));
           })
           .then((response) => {
-            watchedState.updateData.status = 'loading';
             const { feed, posts } = parser(response.data.contents);
             watchedState.feeds.unshift({ id: _.uniqueId, url, ...feed });
             const postsWithId = posts.map((post) => { post.id = _.uniqueId(); return post; });
