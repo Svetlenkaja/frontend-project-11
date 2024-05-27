@@ -6,12 +6,6 @@ export default (data) => {
   if (parseError) {
     console.error(parseError.textContent);
     const error = new Error();
-    error.name = 'ParsingError';
-    throw error;
-  }
-  const rss = xml.querySelector('rss');
-  if (rss === null) {
-    const error = new Error();
     error.name = 'InvalidRSS';
     throw error;
   }
