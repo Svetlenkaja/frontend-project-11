@@ -89,7 +89,7 @@ const app = () => {
       );
 
       const loadUrl = (url) => (
-        axios.get(url)
+        axios.get(buildUrl(url))
           .then((response) => {
             watchedState.updateData.status = 'loading';
             const { feed, posts } = parser(response.data.contents);
